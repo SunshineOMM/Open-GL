@@ -25,11 +25,22 @@ void ErrorCallback(const int code, const char* const error) {
 const size_t N = 100; // Количество точек
 const auto STRIDE = 6 * sizeof(GLfloat); // С учётом выравнивания по модели std430
 const GLfloat POINT_SIZE = 3;            // Размер отрисовываемых точек
-
+struct Rgb {
+	GLint _r;
+	GLint _g;
+	GLint _b;
+	Rgb(GLint r, GLint g, GLint b) {
+		_r = r;
+		_g = g;
+		_b = b;
+	}
+};
+const vector<Rgb> RGB_VEC = { *new Rgb(255,0,255),*new Rgb(255,255,0),*new Rgb(0,255,0),*new Rgb(255,0,0),*new Rgb(0,255,255) };
 
 
 
 int main() {
+	srand(time(NULL));
 	// Основной код приложения пишите здесь
 		// Кидайте runtime_error("Exception message") в случае какой-либо ошибки
 		// Инициализация GLFW с проверкой
@@ -65,7 +76,7 @@ int main() {
 
 		// Устанавливаем функции обработки событий клавиатуры  
 		glfwSetKeyCallback(window, KeyCallback);
-		
+
 
 		// Делаем созданное окно текущим.
 		// Все дальнейшие вызываемые функции OpenGL будут относиться к данному окну.
@@ -87,7 +98,7 @@ int main() {
 
 		//место для кода отрисовки точек
 
-		
+
 
 		// =========================
 		// СБОРКА ШЕЙДЕРНЫХ ПРОГРАММ
@@ -107,31 +118,27 @@ int main() {
 			glGenBuffers(1, &vbo);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);                 // Привязка VBO к вершинному шейдеру
 			vector<GLfloat> data(N * 6);
-			glBufferData(GL_ARRAY_BUFFER, N * STRIDE, data.data(), GL_DYNAMIC_COPY);
 			for (int i = 0; i < data.size(); ++i) {
 				switch (i % 6) {
 				case 0: {
-					data[i] = rand() % 50;
+					data[i] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);
 					break;
 				}
 				case 1: {
-					data[i] = rand() % 50;
+					data[i] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);
 					break;
 				}
 				case 3: {
-					data[i] = rand() % 255;
-					break;
-				}
-				case 4: {
-					data[i] = rand() % 255;
-					break;
-				}
-				case 5: {
-					data[i] = rand() % 255;
+					auto randRgb = RGB_VEC[rand() % 4];
+					data[i] = randRgb._r;
+					data[i + 1] = randRgb._g;
+					data[i + 2] = randRgb._b;
 					break;
 				}
 				}
 			}
+			glBufferData(GL_ARRAY_BUFFER, N * STRIDE, data.data(), GL_DYNAMIC_COPY);
+
 		}
 		// ============================
 		// СОЗДАНИЕ И ИНИЦИАЛИЗАЦИЯ VAO
@@ -143,7 +150,7 @@ int main() {
 		{
 			const auto locationP = glGetAttribLocation(renderProgram.id, "p");
 			const auto locationRGB = glGetAttribLocation(renderProgram.id, "rgb");
-			if (locationP == -1 || locationRGB == -1 )
+			if (locationP == -1 || locationRGB == -1)
 				throw runtime_error("Failed to locate render attribute(s)!");
 
 			glVertexAttribPointer(locationP, 2, GL_FLOAT, GL_FALSE, STRIDE, nullptr);
@@ -173,7 +180,7 @@ int main() {
 			// Первые три параметра обозначают цвет RGB.
 			// Подробнее про RGB: https://ru.wikipedia.org/w/index.php?title=RGB&stable=1.
 			// Последний параметр означает непрозрачность.
-			glClearColor(255,255,255, 1);//   0,191,255,
+			glClearColor(0, 0, 0, 1);//   0,191,255,
 
 			// Очищаем экран.
 			glClear(GL_COLOR_BUFFER_BIT);
