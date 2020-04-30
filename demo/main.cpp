@@ -127,10 +127,10 @@ public:
 // НАСТРОЙКИ МОДЕЛИ
 // ================
 
-const size_t N = 100;                                 // Количество точек
+const size_t N = 10000;                                 // Количество точек
 const GLfloat MIN_SPEED = 0.5f;                       // Минимальная скорость
 const GLfloat MAX_SPEED = 0.8f;                       // Максимальная скорость
-const GLfloat POINT_SIZE = 3;                         // Размер отрисовываемых точек
+const GLfloat POINT_SIZE = 1;                         // Размер отрисовываемых точек
 const GLfloat BACKGROUND_COLOR[] = { 0.5f, 0, 0.5f }; // Цвет фона
 const GLfloat POINT_COLOR[] = { 1, 0.5f, 1 };         // Цвет точек
 
@@ -138,6 +138,7 @@ const GLfloat POINT_COLOR[] = { 1, 0.5f, 1 };         // Цвет точек
 // float t0 - время начала движения
 // vec2  p0 - начальные координаты
 // vec2  v  - вектор скорости
+
 
 const auto STRIDE = 6 * sizeof(GLfloat); // С учётом выравнивания по модели std430
 

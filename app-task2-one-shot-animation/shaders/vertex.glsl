@@ -11,10 +11,27 @@ in vec3 rgb;
 out vec3 color;
 
 void main() {
-float k=p.y/p.y;
-float cosP=sqrt(1/(1-pow(k,2)));
-float sinP=sqrt(1/(1-1/pow(k,2)));
-gl_Position = vec4(p.x+cosP*pointTime*s,p.y+sinP*pointTime*s, 0, 1);
-gl_PointSize=pointSize;
+if(p.x>0){
+	if(p.y>0)	gl_Position=vec4(p.x+s*pointTime,p.y+s*pointTime,0,1);
+	if(p.y<0)	gl_Position=vec4(p.x+s*pointTime,p.y-s*pointTime,0,1);
+	if(p.y==0)	gl_Position=vec4(p.x+s*pointTime,p.y,0,1);
+}
+else{
+	
+	if(p.y>0){
+		if(p.x==0) 	gl_Position=vec4(p.x,p.y+s*pointTime,0,1);
+		else	gl_Position=vec4(p.x-s*pointTime,p.y+s*pointTime,0,1);
+	}
+
+	if(p.y<0){
+		if(p.x==0) gl_Position=vec4(p.x,p.y-s*pointTime,0,1);
+		else	gl_Position=vec4(p.x-s*pointTime,p.y-s*pointTime,0,1);
+	}
+	if(p.y==0)	gl_Position=vec4(p.x-s*pointTime,p.y,0,1);
+}
+gl_PointSize = pointSize;
+
+
 color = rgb;
 }
+//gl_Position = vec4(p.x+cosP*pointTime*s,p.y+sinP*pointTime*s, 0, 1);

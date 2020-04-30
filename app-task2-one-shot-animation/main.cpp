@@ -21,11 +21,12 @@ void ErrorCallback(const int code, const char* const error) {
 //=====================================================================================================================
 	// модель точки:
 	// позиция vec2 p
+	// скорость float s
 	// цвет vec3 rgb
 
-const size_t N = 100; // Количество точек
+const size_t N = 10000000; // Количество точек
 const auto STRIDE = 6 * sizeof(GLfloat); // С учётом выравнивания по модели std430
-const GLfloat POINT_SIZE = 3;            // Размер отрисовываемых точек
+const GLfloat POINT_SIZE = 1;            // Размер отрисовываемых точек
 struct Rgb {
 	GLint _r;
 	GLint _g;
@@ -161,7 +162,7 @@ int main() {
 				throw runtime_error("Failed to locate render attribute(s)!");
 
 			glVertexAttribPointer(locationP, 2, GL_FLOAT, GL_FALSE, STRIDE, nullptr);
-			glVertexAttribPointer(locationS, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(1 * sizeof(GLfloat)));
+			glVertexAttribPointer(locationS, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(2 * sizeof(GLfloat)));
 			glVertexAttribPointer(locationRGB, 3, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
 
 			glEnableVertexAttribArray(locationP);
@@ -175,7 +176,7 @@ int main() {
 		glUseProgram(renderProgram.id);
 
 		glUniform1f(renderPointSizeLocation, POINT_SIZE);
-		glUniform1f(renderPointTimeLocation, static_cast<GLfloat>(glfwGetTime()));
+		
 
 
 
@@ -194,7 +195,7 @@ int main() {
 			// Очищаем экран.
 			glClear(GL_COLOR_BUFFER_BIT);
 
-
+			glUniform1f(renderPointTimeLocation, static_cast<GLfloat>(glfwGetTime()));
 			glDrawArrays(GL_POINTS, 0, N);
 
 
@@ -202,7 +203,7 @@ int main() {
 			// Блокируем выполнение текущего потока, пока не произойдёт какого-либо события.
 			// Если необходимо отрисовывать следующий кадр, не дожидаясь событий,
 			// используйте glfwPollEvents() вместо glfwWaitEvents().
-			glfwWaitEvents();
+			glfwPollEvents();
 
 		}
 
