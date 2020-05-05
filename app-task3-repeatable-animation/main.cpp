@@ -28,12 +28,10 @@ void ErrorCallback(const int code, const char* const error) {
 
 const GLfloat MIN_SPEED = 0.5f;                       // Минимальная скорость
 const GLfloat MAX_SPEED = 0.8f;                       // Максимальная скорость
-const GLfloat BACKGROUND_COLOR[] = { 0.5f, 0, 0.5f }; // Цвет фона
-const size_t N = 100; // Количество точек
+const size_t N = 10000; // Количество точек
 
-const auto STRIDE = 12 * sizeof(GLfloat); // С учётом выравнивания по модели std430
-const GLfloat POINT_SIZE = 3;  // Размер отрисовываемых точек
-const GLfloat POINT_COLOR[] = { 1, 0.5f, 1 };         // Цвет точек
+const auto STRIDE = 8 * sizeof(GLfloat); // С учётом выравнивания по модели std430
+const GLfloat POINT_SIZE = 1;  // Размер отрисовываемых точек
 
 struct Rgb {
 	GLint _r;
@@ -46,7 +44,6 @@ struct Rgb {
 	}
 };
 const vector<Rgb> RGB_VEC = { *new Rgb(255,0,255),*new Rgb(255,255,0),*new Rgb(0,255,0),*new Rgb(255,0,0),*new Rgb(0,255,255) };
-
 
 
 int main() {
@@ -123,12 +120,14 @@ int main() {
 
 		const auto renderPointSizeLocation = glGetUniformLocation(renderProgram.id, "pointSize");
 		const auto renderPointTimeLocation = glGetUniformLocation(renderProgram.id, "pointTime");
-		//const auto renderColorLocation = glGetUniformLocation(renderProgram.id, "color");
+		const auto renderColorLocation = glGetUniformLocation(renderProgram.id, "color");
 		if (renderPointSizeLocation == -1 || renderPointTimeLocation == -1 )//|| renderColorLocation==-1)
 			throw runtime_error("Failed to locate render uniform(s)!");
 
 		const auto reflectPointTimeLocation = glGetUniformLocation(reflectProgram.id, "pointTime");
-		if (reflectPointTimeLocation == -1)
+		const auto reflectMinSpeedLocation = glGetUniformLocation(initProgram.id, "minSpeed");
+		const auto reflectMaxSpeedLocation = glGetUniformLocation(initProgram.id, "maxSpeed");
+		if (reflectPointTimeLocation == -1 || reflectMinSpeedLocation==-1 || reflectMaxSpeedLocation==-1)
 			throw runtime_error("Failed to locate init uniform(s)!");
 
 		const auto initMinSpeedLocation = glGetUniformLocation(initProgram.id, "minSpeed");
@@ -161,7 +160,7 @@ int main() {
 		glUniform1f(initMaxSpeedLocation, MAX_SPEED);
 		glUniform1f(initPointTimeLocation, static_cast<GLfloat>(glfwGetTime()));
 		glDispatchCompute(N, 1, 1);
-		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 		glUseProgram(0);
 		glDeleteProgram(initProgram.id);
 
@@ -174,29 +173,30 @@ int main() {
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 		{
-			const auto locationT0 = glGetAttribLocation(renderProgram.id, "t0");
+			const auto locationC = glGetAttribLocation(renderProgram.id, "color");
+			const auto locationT0 = glGetAttribLocation(renderProgram.id, "t0");			
 			const auto locationP0 = glGetAttribLocation(renderProgram.id, "p0");
-			const auto locationV = glGetAttribLocation(renderProgram.id, "v");
-			const auto locationC= glGetAttribLocation(renderProgram.id, "color");
+			const auto locationV = glGetAttribLocation(renderProgram.id, "v");		
 			if (locationT0 == -1 || locationP0 == -1 || locationV == -1 || locationC==-1)
 				throw runtime_error("Failed to locate render attribute(s)!");
 
-			glVertexAttribPointer(locationT0, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(0 * sizeof(GLfloat)));
-			glVertexAttribPointer(locationP0, 2, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
+			glVertexAttribPointer(locationC, 3, GL_FLOAT, GL_FALSE, STRIDE, nullptr);
+			glVertexAttribPointer(locationT0, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));			
+			glVertexAttribPointer(locationP0, 2, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(4 * sizeof(GLfloat)));
 			glVertexAttribPointer(locationV, 2, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(6 * sizeof(GLfloat)));
-			glVertexAttribPointer(locationC, 3, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(9 * sizeof(GLfloat)));
-
-			glEnableVertexAttribArray(locationT0);
+			
+			glEnableVertexAttribArray(locationC);
+			glEnableVertexAttribArray(locationT0);			
 			glEnableVertexAttribArray(locationP0);
 			glEnableVertexAttribArray(locationV);
-			glEnableVertexAttribArray(locationC);
+			
 		}
 
 
 		// ===========================
 		// ПРЕДСТАРТОВАЯ ПОДГОТОВКА...
 		// ===========================
-		glClearColor(255, 255, 255, 1);
+		glClearColor(0, 0, 0, 1);
 
 		glUseProgram(renderProgram.id);
 		glUniform1f(renderPointSizeLocation, POINT_SIZE);
@@ -219,7 +219,7 @@ int main() {
 			glDispatchCompute(N, 1, 1);
 			glUseProgram(0);
 
-			glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+			//glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
 			// Мы пропускаем привязку VBO к GL_ARRAY_BUFFER,
 		   // т. к. у нас только один VBO и он уже привязан к GL_ARRAY_BUFFER

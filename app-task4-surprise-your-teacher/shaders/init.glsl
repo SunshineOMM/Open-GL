@@ -5,9 +5,8 @@
 
 layout(local_size_x = 1) in;
 
-uniform float minSpeed;
-uniform float maxSpeed;
 uniform float pointTime;
+uniform vec2 p0;
 
 struct Point {
     vec3 color;
@@ -16,9 +15,13 @@ struct Point {
     vec2 v;  
 };
 
-layout(std430, binding = 0) buffer ssbo {
-    Point points[];
+layout(std430, binding = 0) buffer vbo0 {
+    Point points1[];
 };
+
+//layout(std430, binding = 1) buffer vbo1 {
+//    Point points2[];
+//};
 
 // ===============================
 // ГЕНЕРАТОР ПСЕВДОСЛУЧАЙНЫХ ЧИСЕЛ
@@ -62,32 +65,36 @@ float xorshift() {
 const float PI = 3.14159;
 
 
-vec3 unpackColor() 
-{
-    float f = xorshift();
-    vec3 color;
-    color.r = floor(f / 65536);
-    color.g = floor((f - color.r * 65536) / 256.0);
-    color.b = floor(f - color.r * 65536 - color.g * 256.0);
-    return color / 256.0;
-}
-
-
 void main() {
-    Point point = points[gl_GlobalInvocationID.x];    
-    float speed = minSpeed + xorshift() * (maxSpeed - minSpeed);
+    Point point = points1[gl_GlobalInvocationID.x];    
     
     
     point.t0 = pointTime;
-    point.p0.x =-1 + xorshift() * 2;
-    point.p0.y = -1 + xorshift() * 2;
-    //float angle = 2 * PI * xorshift();
+
+    point.p0=p0;
+
     float angle = atan(point.p0.y,point.p0.x);
-    point.v.x = speed * cos(angle);
-    point.v.y = speed * sin(angle);
+    point.v.x =  xorshift()-0.5;
+    point.v.y =   xorshift()-0.5;
     point.color.x = xorshift() ;
     point.color.y=xorshift();
     point.color.z=xorshift();
+    points1[gl_GlobalInvocationID.x] = point;
 
-    points[gl_GlobalInvocationID.x] = point;
+
+//    Point point2 = points2[gl_GlobalInvocationID.x];    
+//        
+//    point2.t0 = pointTime;
+//
+//    point2.p0.x =0.5;
+//    point2.p0.y = 0.5;
+//
+//    point2.v.x = xorshift()-0.5;
+//    point2.v.y = xorshift()-0.5;
+//
+//    point2.color.x = xorshift() ;
+//    point2.color.y=xorshift();
+//    point2.color.z=xorshift();
+// 
+//    points2[gl_GlobalInvocationID.x] = point2;
 }

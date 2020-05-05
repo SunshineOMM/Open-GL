@@ -1,3 +1,10 @@
-﻿#version 430 core
+#version 430 core
 
-// Ваш шейдер здесь
+in vec4 ocolor;
+
+out vec4 outColor;
+
+void main() {
+
+    outColor = vec4(ocolor);
+}

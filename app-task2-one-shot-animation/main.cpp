@@ -5,6 +5,8 @@
 #include <time.h>
 #include <cstdlib>
 #include <cmath>          // arctg,cos, sin
+#include <valarray>
+#define PI 3.14159265358979
 
 using namespace std;
 
@@ -21,11 +23,11 @@ void ErrorCallback(const int code, const char* const error) {
 //=====================================================================================================================
 	// модель точки:
 	// позиция vec2 p
-	// скорость float s
+	// направление скорости vec2 v
 	// цвет vec3 rgb
 
-const size_t N = 10000000; // Количество точек
-const auto STRIDE = 6 * sizeof(GLfloat); // С учётом выравнивания по модели std430
+const size_t N = 100000; // Количество точек
+const auto STRIDE = 8 * sizeof(GLfloat); // С учётом выравнивания по модели std430
 const GLfloat POINT_SIZE = 1;            // Размер отрисовываемых точек
 struct Rgb {
 	GLint _r;
@@ -42,6 +44,7 @@ const vector<Rgb> RGB_VEC = { *new Rgb(255,0,255),*new Rgb(255,255,0),*new Rgb(0
 
 
 int main() {
+	
 	srand(time(NULL));
 	// Основной код приложения пишите здесь
 		// Кидайте runtime_error("Exception message") в случае какой-либо ошибки
@@ -120,22 +123,25 @@ int main() {
 		{
 			glGenBuffers(1, &vbo);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo);                 // Привязка VBO к вершинному шейдеру
-			vector<GLfloat> data(N * 6);
+			vector<GLfloat> data(N * 8);
 			for (int i = 0; i < data.size(); ++i) {
-				switch (i % 6) {
+				switch (i % 8) {
 				case 0: {
-					data[i] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);
+					data[i] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);				
+					data[i+1] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);
 					break;
-				}
-				case 1: {
-					data[i] = (double)(rand()) / RAND_MAX * (rand() % 10 > 5 ? -1 : +1);
-					break;
-				}
+				}			
 				case 2: {
-					data[i] = (double)(rand()) / RAND_MAX;
+					data[i] = glfwGetTime();
 					break;
 				}
 				case 3: {
+					float angel = atan2(data[i - 2],data[i - 3]);
+					data[i] = cos(angel) * (double)(rand()) / RAND_MAX;
+					data[i + 1] = sin(angel) * (double)(rand()) / RAND_MAX;;
+					break;
+				}
+				case 5: {
 					auto randRgb = RGB_VEC[rand() % 4];
 					data[i] = randRgb._r;
 					data[i + 1] = randRgb._g;
@@ -156,17 +162,20 @@ int main() {
 		glBindVertexArray(vao);
 		{
 			const auto locationP = glGetAttribLocation(renderProgram.id, "p");
-			const auto locationS = glGetAttribLocation(renderProgram.id, "s");
+			const auto locationT = glGetAttribLocation(renderProgram.id, "t0");
+			const auto locationV = glGetAttribLocation(renderProgram.id, "v");
 			const auto locationRGB = glGetAttribLocation(renderProgram.id, "rgb");
-			if (locationP == -1 || locationRGB == -1 || locationS == -1)
+			if (locationP == -1 || locationRGB == -1 ||  locationV==-1|| locationT==-1)
 				throw runtime_error("Failed to locate render attribute(s)!");
 
 			glVertexAttribPointer(locationP, 2, GL_FLOAT, GL_FALSE, STRIDE, nullptr);
-			glVertexAttribPointer(locationS, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(2 * sizeof(GLfloat)));
-			glVertexAttribPointer(locationRGB, 3, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
+			glVertexAttribPointer(locationT, 1, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(2 * sizeof(GLfloat)));
+			glVertexAttribPointer(locationV, 2, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
+			glVertexAttribPointer(locationRGB, 3, GL_FLOAT, GL_FALSE, STRIDE, reinterpret_cast<GLvoid*>(5 * sizeof(GLfloat)));
 
 			glEnableVertexAttribArray(locationP);
-			glEnableVertexAttribArray(locationS);
+			glEnableVertexAttribArray(locationT);
+			glEnableVertexAttribArray(locationV);
 			glEnableVertexAttribArray(locationRGB);
 		}
 

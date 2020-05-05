@@ -127,7 +127,7 @@ public:
 // НАСТРОЙКИ МОДЕЛИ
 // ================
 
-const size_t N = 10000;                                 // Количество точек
+const size_t N = 100;                                 // Количество точек
 const GLfloat MIN_SPEED = 0.5f;                       // Минимальная скорость
 const GLfloat MAX_SPEED = 0.8f;                       // Максимальная скорость
 const GLfloat POINT_SIZE = 1;                         // Размер отрисовываемых точек
